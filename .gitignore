@@ -1,2 +1,3 @@
 .venv
-web_app/__pycache__
+__pycache__
+pages/__pycache__

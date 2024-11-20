@@ -13,56 +13,74 @@ import folium
 
 from mapping_utils import mapping, coord_arrondissements
 
+# Configurer la page
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/e/ea/Logo_application_ePower_Paris.png", width=200)
+
+# Ajouter un logo et un titre dans la barre latérale
+
+st.sidebar.title("ePower Paris")
+st.sidebar.markdown("Explorez les bornes de recharge électriques à Paris 🚗⚡")
+
 
 def page_accueil(df):
     """
-    page d'accueil
+    Page d'accueil
     """
-    st.title('Visualisation des bornes de recharge pour véhicules électriques à Paris')
-
+    # Ajouter le titre et le texte de présentation
+    st.title('ePower Paris')
     st.markdown("""
     <div style="text-align: justify;">
-    Bienvenue dans cette application dédiée à la visualisation des bornes de recharge pour véhicules électriques à Paris. Les données disponibles fournissent des informations détaillées sur l'emplacement, le statut, ainsi que d'autres caractéristiques des bornes de recharge.
+    Bienvenue dans <b>ePower Paris</b>, une application dédiée à la visualisation des bornes de recharge pour véhicules électriques à Paris. 
+    Les données disponibles fournissent des informations détaillées sur l'emplacement, le statut, ainsi que d'autres caractéristiques des bornes de recharge.
     Explorez la carte interactive ci-dessous pour découvrir la répartition des bornes dans les différents arrondissements parisiens et planifiez vos trajets en conséquence.
     </div>
     """, unsafe_allow_html=True)
 
-    st.image("https://mobiwisy.fr/wp-content/uploads/Borne-recharge-Belib-Paris-e1669651299275-1068x702.jpg.webp", caption="Station Belib’")
+    # Ajouter un espace avant l'image
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Ajouter une image illustrative
+    st.image("https://www.automobile-propre.com/wp-content/uploads/2011/10/autolib.jpg", caption="Station Belib’")
+
+    # Ajouter une description supplémentaire
     st.markdown("""
             <div style="text-align: justify;">
-            Belib’ est le réseau public parisien de bornes de recharge pour véhicules électriques, opéré par Total Marketing France (TMF). Il est déployé depuis mars 2021 et comprend environ 430 stations, soit plus de 2000 bornes de recharge. 
-            Des bornes de recharge rapide sont aussi déployées dans certains parcs concédés.
-            Le réseau Belib' vous permet de recharger à tout moment votre véhicule électrique ou hybride rechargeable (2 roues motorisés compris). Les temps de recharge varient en fonction de la puissance sélectionnée. Si votre véhicule électrique le permet, la puissance maximale fournie par la borne sera de 22 kW. 
-            Toutes les bornes Belib' disposent de prises T2, T3, domestique, Combo et CHAdeMo.
-
-            Pour tout savoir et bénéficier du service, inscrivez-vous sur le [site belib.paris](https://belib.paris).
+            Belib’ est le réseau public parisien de bornes de recharge pour véhicules électriques, opéré par Total Marketing France (TMF). 
+            Il est déployé depuis mars 2021 et comprend environ 430 stations, soit plus de 2000 bornes de recharge. 
+            Des bornes de recharge rapide sont aussi déployées dans certains parcs concédés. Pour tout savoir et bénéficier du service, inscrivez-vous sur le 
+            [site belib.paris](https://belib.paris).
             </div>
             """, unsafe_allow_html=True)
 
-    # carte de Paris en intégralité
+    # Ajouter un séparateur
+    st.markdown("---")
 
+    # Carte de Paris en intégralité
     map = mapping(df)
+    st.subheader("Carte des Points de Recharge à Paris")
     folium_static(map)
-
 
 def page_recherche(df):
     """
-    page de recherche de bornes
+    Page de recherche de bornes
     """
+    # Filtrer par arrondissement
+    st.subheader("Rechercher des Bornes de Recharge")
     arrondissement = st.selectbox(
-    label='Selectionner un arrondissement',
-    options=sorted(df['arrondissement'].unique()))
+        label='Sélectionnez un arrondissement',
+        options=sorted(df['arrondissement'].unique())
+    )
 
     df_arrondissement = df[df['arrondissement'] == arrondissement]
 
+    # Carte des bornes filtrées
     st.markdown(f"## Points de recharge dans le {arrondissement}")
-    map_arrondissement = mapping(df_arrondissement, centrage = coord_arrondissements(arrondissement), zoom = 14)
+    map_arrondissement = mapping(df_arrondissement, centrage=coord_arrondissements(arrondissement), zoom=14)
     folium_static(map_arrondissement)
 
-    # informations sur les bornes de l'arrondissement sélectionné
+    # Détails des bornes
     st.markdown(f"## Détails des bornes de recharge dans le {arrondissement}")
     st.dataframe(df_arrondissement[['nom_station', 'adresse_station', 'statut_pdc', 'puissance_nominale']].reset_index(drop=True))
-
 
 def page_data_analyse(df):
     """
@@ -152,6 +170,3 @@ if __name__=='__main__':
         page_data_analyse(df)    
     elif page == "Recherche de bornes":
         page_recherche(df)
-        
-
-

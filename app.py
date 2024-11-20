@@ -22,9 +22,8 @@ def page_accueil(df):
 
     st.markdown("""
     <div style="text-align: justify;">
-    Ceci est une application de visualisation des bornes de recharge à Paris. 
-    Les données incluent des informations sur l'emplacement, le statut et d'autres détails des bornes de recharge. 
-    Vous pouvez explorer la carte ci-dessous pour voir la distribution des bornes de recharge dans différents arrondissements de Paris.
+    Bienvenue dans cette application dédiée à la visualisation des bornes de recharge pour véhicules électriques à Paris. Les données disponibles fournissent des informations détaillées sur l'emplacement, le statut, ainsi que d'autres caractéristiques des bornes de recharge.
+    Explorez la carte interactive ci-dessous pour découvrir la répartition des bornes dans les différents arrondissements parisiens et planifiez vos trajets en conséquence.
     </div>
     """, unsafe_allow_html=True)
 

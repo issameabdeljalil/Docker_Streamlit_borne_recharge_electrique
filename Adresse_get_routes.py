@@ -48,11 +48,12 @@ def find_nearest_borne(df, user_coords):
     min_distance = float("inf")
     
     for _, row in df.iterrows():
-        station_coords = (row['latitude'], row['longitude'])
-        distance = geodesic(user_coords, station_coords).meters
-        if distance < min_distance:
-            min_distance = distance
-            nearest_station = row
+        if row['statut_pdc'] == "En service":
+            station_coords = (row['latitude'], row['longitude'])
+            distance = geodesic(user_coords, station_coords).meters
+            if distance < min_distance:
+                min_distance = distance
+                nearest_station = row
 
     return nearest_station
 

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import folium
 from mapping_utils import mapping
 from geopy.distance import geodesic
-from Adresse_get_routes import geocode_address_with_api_gouv, correct_address_with_api_gouv, find_nearest_borne, get_route
+from adresse_get_routes import geocode_address_with_api_gouv, correct_address_with_api_gouv, find_nearest_borne, get_route
 
 def prepare_data(df):
     """Prépare les données : extraire latitude et longitude de 'coordonneesxy' si elles existent."""
@@ -123,19 +123,21 @@ def page_recherche(df):
     elif mode == "Cliquez sur la carte":
         paris_map = folium.Map(location=[48.8566, 2.3522], zoom_start=12)
         location = st_folium(paris_map, width=700, height=500, returned_objects=["last_clicked"])
-
-        if location and "last_clicked" in location:
-            user_coords = (location["last_clicked"]["lat"], location["last_clicked"]["lng"])
-            st.write(f"Coordonnées sélectionnées : Latitude = {user_coords[0]}, Longitude = {user_coords[1]}")
-        else:
-            st.write("Cliquez sur la carte pour sélectionner une localisation.")
+        try:
+            if location and "last_clicked" in location:
+                user_coords = (location["last_clicked"]["lat"], location["last_clicked"]["lng"])
+                st.write(f"Coordonnées sélectionnées : Latitude = {user_coords[0]}, Longitude = {user_coords[1]}")
+            else:
+                st.write("Cliquez sur la carte pour sélectionner une localisation.")
+        except:
+            pass
     
     if user_coords:
         nearest_borne = find_nearest_borne(df, user_coords)
 
         if nearest_borne is not None:
-            st.success(f"La borne la plus proche est à {nearest_borne['adresse_station']}.")
-            st.write(f"Distance : {geodesic(user_coords, (nearest_borne['latitude'], nearest_borne['longitude'])).meters:.2f} mètres.")
+            st.success(f"La borne la plus proche est située au {nearest_borne['adresse_station']}.")
+            st.write(f"Distance directe : {geodesic(user_coords, (nearest_borne['latitude'], nearest_borne['longitude'])).meters:.2f} mètres.")
 
             route_points, route_distance, route_duration = get_route(
                 start_coords=user_coords,
@@ -143,8 +145,8 @@ def page_recherche(df):
             )
 
             if route_points:
-                st.write(f"Distance totale : {route_distance / 1000:.2f} km")
-                st.write(f"Durée estimée : {route_duration / 60:.2f} minutes")
+                st.write(f"Distance totale du parcours : {route_distance / 1000:.2f} km")
+                st.write(f"Durée estimée : {int(route_duration // 60)} minutes {int(route_duration % 60)} secondes")
                 map_ = folium.Map(location=user_coords, zoom_start=15)
                 folium.Marker(location=user_coords, popup="Vous êtes ici", icon=folium.Icon(color="red", icon="info-sign")).add_to(map_)
                 folium.Marker(location=[nearest_borne['latitude'], nearest_borne['longitude']], popup=f"Borne : {nearest_borne['nom_station']}", icon=folium.Icon(color="green", icon="bolt")).add_to(map_)

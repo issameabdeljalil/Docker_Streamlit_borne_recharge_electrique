@@ -158,60 +158,10 @@ def page_recherche_adresse(df):
             st.error("Aucune borne de recharge trouvée.")
 
 
-def page_recherche_clic(df):
-    
-    user_coords = None
-    location = None
-    
-    """Recherche de bornes à partir d'un click sur la carte"""
-    st.title("Trouver la borne la plus proche et un itinéraire en cliquant sur la carte")
-    paris_map = folium.Map(location=[48.8566, 2.3522], zoom_start=12)
-    location = st_folium(paris_map, width=700, height=500, returned_objects=["last_clicked"])
-
-    try:
-        if location and "last_clicked" in location:
-            user_coords = (location["last_clicked"]["lat"], location["last_clicked"]["lng"])
-            st.write(f"Coordonnées sélectionnées : Latitude = {user_coords[0]}, Longitude = {user_coords[1]}")
-        else:
-            st.write("Cliquez sur la carte pour sélectionner une localisation.")
-    except:
-        pass
-
-    if user_coords:
-        nearest_borne = find_nearest_borne(df, user_coords)
-
-        if nearest_borne is not None:
-            st.success(f"La borne la plus proche est située au {nearest_borne['adresse_station']}.")
-            st.write(f"Distance directe : {geodesic(user_coords, (nearest_borne['latitude'], nearest_borne['longitude'])).meters:.2f} mètres.")
-
-            route_points, route_distance, route_duration = get_route(
-                start_coords=user_coords,
-                end_coords=(nearest_borne['latitude'], nearest_borne['longitude'])
-            )
-
-            if route_points:
-                st.write(f"Distance totale du parcours : {route_distance / 1000:.2f} km")
-                heures = int(route_duration // (60*60))
-                minutes = int((route_duration % (60*60)) / 60)
-                if heures == 0:
-                    st.write(f"Durée estimée : {minutes} minutes")
-                else:
-                    st.write(f"Durée estimée : {heures} heures et {minutes} minutes")
-                map_ = folium.Map(location=user_coords, zoom_start=15)
-                folium.Marker(location=user_coords, popup="Vous êtes ici", icon=folium.Icon(color="red", icon="info-sign")).add_to(map_)
-                folium.Marker(location=[nearest_borne['latitude'], nearest_borne['longitude']], popup=f"Borne : {nearest_borne['nom_station']}", icon=folium.Icon(color="green", icon="bolt")).add_to(map_)
-                folium.PolyLine(route_points, color="blue", weight=5, opacity=0.8, tooltip="Itinéraire").add_to(map_)
-                folium_static(map_)
-            else:
-                st.error("Impossible de tracer l'itinéraire.")
-        else:
-            st.error("Aucune borne de recharge trouvée.")
-
 if __name__ == '__main__':
     df = pd.read_csv('data/raw_data.csv', sep=';')
     df = prepare_data(df)
-    page = st.sidebar.selectbox("Navigation", ["Présentation", "Data analyse",
-                                                "Recherche de bornes par adresse", "Recherche de bornes par clic"])
+    page = st.sidebar.selectbox("Navigation", ["Présentation", "Data analyse", "Recherche de bornes par adresse"])
 
     if page == "Présentation":
         page_accueil(df)
@@ -219,5 +169,3 @@ if __name__ == '__main__':
         page_data_analyse(df)
     elif page == "Recherche de bornes par adresse":
         page_recherche_adresse(df)
-    elif page == "Recherche de bornes par clic":
-        page_recherche_clic(df)

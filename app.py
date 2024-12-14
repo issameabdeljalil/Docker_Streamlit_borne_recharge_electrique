@@ -6,13 +6,13 @@ app.py
 """
 import pandas as pd
 import streamlit as st
-from streamlit_folium import folium_static
+from streamlit_folium import folium_static, st_folium
 import seaborn as sns
 import matplotlib.pyplot as plt
 import folium
 from mapping_utils import mapping, coord_arrondissements
 from geopy.distance import geodesic
-from Adresse_get_routes import geocode_address_with_api_gouv, correct_address_with_api_gouv, find_nearest_borne, get_route
+from adresse_get_routes import geocode_address_with_api_gouv, correct_address_with_api_gouv, find_nearest_borne, get_route
 from geopy.geocoders import Nominatim
 import geocoder
 from PIL import Image
@@ -59,13 +59,17 @@ def page_accueil(df):
     </div>
     """, unsafe_allow_html=True)
 
+    # logos
+    
     try:
-        img = Image.open("data/belib.jpg")  # Charger une image locale
-        st.image(img, caption="Station Belib’")
+        img = Image.open("data/belib.jpg")  #  image belib locale
+        st.image(img, caption="Station Belib’", width=600)
     except FileNotFoundError:
         st.error("L'image 'belib.jpg' est introuvable. Vérifiez le chemin.")
     except Exception as e:
         st.error(f"Erreur lors du chargement de l'image : {e}")
+
+    # carte des stations disponibles
 
     map = mapping(df)
     st.subheader("Carte des Points de Recharge à Paris")
@@ -77,6 +81,8 @@ def page_data_analyse(df):
     """
     st.title("Analyse des données")
     st.write("Explorez les points de recharge à Paris.")
+
+    # barplot 1
 
     try:
         st.subheader("Répartition des points de recharge par arrondissement")
@@ -90,6 +96,8 @@ def page_data_analyse(df):
     except Exception as e:
         st.error(f"Erreur lors de la visualisation des données : {e}")
 
+    # barplot 2
+
     try:
         st.subheader("Types de prises disponibles")
         prise_cols = ["prise_type_ef", "prise_type_2", "prise_type_combo_ccs", "prise_type_chademo"]
@@ -102,6 +110,44 @@ def page_data_analyse(df):
         st.pyplot(fig2)
     except Exception as e:
         st.error(f"Erreur lors de l'analyse des types de prises : {e}")
+
+    # carte avec selection des arrondissements
+
+    arrondissement = st.sidebar.selectbox("Choisissez l'arrondissement", options=df["arrondissement"].unique())
+    data_filtered = df[df["arrondissement"] == arrondissement]
+
+    map_paris = folium.Map(location=coord_arrondissements(arrondissement), zoom_start=13)
+    for _, row in data_filtered.iterrows():
+        popup_text = f"""
+        <b>Station :</b> {row['nom_station']}<br>
+        <b>Adresse :</b> {row['adresse_station']}<br>
+        <b>Type de Prises :</b> {", ".join([t for t in ['prise_type_ef', 'prise_type_2'] if row[t]])}<br>
+        <b>Capacité :</b> {row['nbre_pdc']} points<br>
+        <b>Accessibilité PMR :</b> {row['accessibilite_pmr']}<br>
+        <b>Condition d'accès :</b> {row['condition_acces']}<br>
+        <b>Tarification :</b> {row['tarification']}<br>
+        """
+        folium.Marker(
+            location=[row['latitude'], row['longitude']],
+            popup=popup_text,
+            tooltip=row['nom_station'],
+            icon=folium.Icon(color="blue" if row["puissance_nominale"] >= 7 else "green")
+        ).add_to(map_paris)
+
+    st.subheader("Carte des stations situées dans le " + arrondissement)
+    st_folium(map_paris, width=700, height=500)
+
+    st.subheader("Stations situées dans le " + arrondissement)
+    
+    data_filtered = data_filtered.rename(columns={
+        'nom_station': 'Nom de la station',
+        'adresse_station': 'Adresse de la station',
+        'latitude': 'Latitude',
+        'longitude': 'Longitude'
+    })
+
+    colonnes = ['Nom de la station', 'Adresse de la station', 'Latitude', 'Longitude']
+    st.write(data_filtered[colonnes].reset_index(drop=True))
 
 def page_recherche_adresse(df):
     """Recherche de bornes à partir d'une adresse"""
@@ -189,7 +235,7 @@ if __name__ == '__main__':
     with st.sidebar:
         try:
             img = Image.open("data/RESIZE.png")
-            img_resized = img.resize((70, 70))  # Largeur=70px, Hauteur=70px
+            img_resized = img.resize((100, 100))
             st.image(img_resized)
         except FileNotFoundError:
             st.error("Le fichier logo est introuvable.")

@@ -2,5 +2,5 @@
 
 echo "Launch app"
 source .venv/bin/activate
-streamlit run app.py --server.port 5008
+streamlit run app.py --server.port 5006
 
